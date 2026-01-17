@@ -1,40 +1,38 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Engine</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background-color: #1a1a1a;
+        font-family: Arial, sans-serif;
+      }
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>3D Engine</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background-color: #1a1a1a;
-      font-family: Arial, sans-serif;
-    }
+      canvas {
+        border: 2px solid #333;
+        background-color: #000;
+      }
 
-    canvas {
-      border: 2px solid #333;
-      background-color: #000;
-    }
+      h1 {
+        position: absolute;
+        top: 0;
+        color: white;
+        text-align: center;
+        width: 100%;
+      }
+    </style>
+  </head>
 
-    h1 {
-      position: absolute;
-      top: 20px;
-      color: white;
-      text-align: center;
-      width: 100%;
-    }
-  </style>
-</head>
-
-<body>
-  <h1>Rotating cube</h1>
-  <canvas id="canvas"></canvas>
-</body>
-
+  <body>
+    <h1>Basic wireframe</h1>
+    <canvas id="canvas"></canvas>
+  </body>
 </html>
