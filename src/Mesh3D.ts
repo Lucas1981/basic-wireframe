@@ -1,32 +1,30 @@
 import { Polygon3D } from './Polygon3D';
 import { Point3D } from './Point3D';
 
-// Mesh3D class containing shared points, vertices (edges), and polygons
+// Mesh3D class containing vertices (positions) and polygons (with vertex indices)
 // This is pure geometry data that can be instanced multiple times
 export class Mesh3D {
-    private _points: Point3D[];
-    private _vertices: [number, number][]; // Edges connecting points
+    private _vertices: Point3D[];
     private _polygons: Polygon3D[];
     private _boundingRadius: number; // Pre-calculated bounding sphere radius
 
-    constructor(points: Point3D[], vertices: [number, number][], polygons: Polygon3D[]) {
-        this._points = points;
+    constructor(vertices: Point3D[], polygons: Polygon3D[]) {
         this._vertices = vertices;
         this._polygons = polygons;
         this._boundingRadius = this.calculateBoundingRadius();
     }
 
-    // Calculate bounding sphere radius (max distance from origin to any point)
+    // Calculate bounding sphere radius (max distance from origin to any vertex)
     private calculateBoundingRadius(): number {
         let maxRadiusSquared = 0;
-        
-        for (const point of this._points) {
-            const distSquared = point.x * point.x + point.y * point.y + point.z * point.z;
+
+        for (const vertex of this._vertices) {
+            const distSquared = vertex.x * vertex.x + vertex.y * vertex.y + vertex.z * vertex.z;
             if (distSquared > maxRadiusSquared) {
                 maxRadiusSquared = distSquared;
             }
         }
-        
+
         return Math.sqrt(maxRadiusSquared);
     }
 
@@ -35,25 +33,15 @@ export class Mesh3D {
         return this._boundingRadius;
     }
 
-    // Getter for points
-    public getPoints(): Point3D[] {
-        return this._points;
-    }
-
-    // Setter for points (recalculates bounding radius)
-    public setPoints(points: Point3D[]): void {
-        this._points = points;
-        this._boundingRadius = this.calculateBoundingRadius();
-    }
-
-    // Getter for vertices (edges)
-    public getVertices(): [number, number][] {
+    // Getter for vertices (positions)
+    public getVertices(): Point3D[] {
         return this._vertices;
     }
 
-    // Setter for vertices (edges)
-    public setVertices(vertices: [number, number][]): void {
+    // Setter for vertices (recalculates bounding radius)
+    public setVertices(vertices: Point3D[]): void {
         this._vertices = vertices;
+        this._boundingRadius = this.calculateBoundingRadius();
     }
 
     // Getter for polygons
@@ -66,18 +54,8 @@ export class Mesh3D {
         this._polygons = polygons;
     }
 
-    // For backward compatibility, keep polygons as a getter
+    // For backward compatibility
     public get polygons(): Polygon3D[] {
         return this._polygons;
-    }
-
-    // For backward compatibility, keep points as a getter
-    public get points(): Point3D[] {
-        return this._points;
-    }
-
-    // For backward compatibility, keep vertices as a getter
-    public get vertices(): [number, number][] {
-        return this._vertices;
     }
 }

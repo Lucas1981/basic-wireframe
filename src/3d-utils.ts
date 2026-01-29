@@ -17,8 +17,7 @@ import {
 
 // Interface for JSON 3D object data
 interface Mesh3DData {
-  points: { x: number; y: number; z: number }[];
-  vertices: number[][]; // Array of [point_index1, point_index2] pairs
+  vertices: { x: number; y: number; z: number }[];
   polygons: {
     color: string;
     vertexIndices: number[]; // Indices into the vertices array
@@ -27,27 +26,15 @@ interface Mesh3DData {
 
 // Function to create a 3D mesh from JSON data (compile-time loading)
 export function createMesh3DFromJSONData(jsonData: Mesh3DData): Mesh3D {
-  // Convert plain objects to Point3D instances
-  const points = jsonData.points.map(
-    (point) => new Point3D(point.x, point.y, point.z)
+  const vertices = jsonData.vertices.map(
+    (v) => new Point3D(v.x, v.y, v.z)
   );
 
-  // Convert number[][] to [number, number][] with validation
-  const vertices: [number, number][] = jsonData.vertices.map((vertex) => {
-    if (vertex.length !== 2) {
-      throw new Error(
-        `Invalid vertex: expected 2 elements, got ${vertex.length}`
-      );
-    }
-    return [vertex[0], vertex[1]];
-  });
-
-  // Create polygons with vertex indices
   const polygons = jsonData.polygons.map(
-    (polygonData) => new Polygon3D(polygonData.color, polygonData.vertexIndices)
+    (p) => new Polygon3D(p.color, p.vertexIndices)
   );
 
-  return new Mesh3D(points, vertices, polygons);
+  return new Mesh3D(vertices, polygons);
 }
 
 // Simple orthographic projection from 3D to 2D (ignores depth)
@@ -117,21 +104,20 @@ export function rotateMesh3DY(mesh: Mesh3D, angleInDegrees: number): void {
   const cosAngle = Math.cos(angleInRadians);
   const sinAngle = Math.sin(angleInRadians);
 
-  // Rotate all points in the mesh (shared by all polygons)
-  const rotatedPoints = mesh.getPoints().map((point) => {
+  // Rotate all vertices in the mesh
+  const rotatedVertices = mesh.getVertices().map((vertex) => {
     // Y-axis rotation matrix:
     // x' = x * cos(θ) + z * sin(θ)
     // y' = y (unchanged)
     // z' = -x * sin(θ) + z * cos(θ)
-    const newX = point.x * cosAngle + point.z * sinAngle;
-    const newY = point.y; // Y remains unchanged for Y-axis rotation
-    const newZ = -point.x * sinAngle + point.z * cosAngle;
+    const newX = vertex.x * cosAngle + vertex.z * sinAngle;
+    const newY = vertex.y; // Y remains unchanged for Y-axis rotation
+    const newZ = -vertex.x * sinAngle + vertex.z * cosAngle;
 
     return new Point3D(newX, newY, newZ);
   });
 
-  // Set the rotated points back to the mesh
-  mesh.setPoints(rotatedPoints);
+  mesh.setVertices(rotatedVertices);
 }
 
 // Apply a transform to a point (scale, rotate, translate)
@@ -313,7 +299,7 @@ export function cullSceneObject(
   );
 }
 
-// Function to draw a scene object by projecting points and rendering edges
+// Function to draw a scene object by projecting vertices and rendering polygon edges
 export function drawSceneObject(
   canvas: Canvas,
   sceneObject: SceneObject,
@@ -321,38 +307,28 @@ export function drawSceneObject(
 ): void {
   const mesh = sceneObject.getMesh();
 
-  // Get all 3D points, vertices, and polygons from the mesh
-  const points3D = mesh.getPoints();
-  const vertices = mesh.getVertices();
+  const vertices3D = mesh.getVertices();
   const polygons = mesh.getPolygons();
 
-  // Apply object transform, then camera transform, then project to 2D
-  const projectedPoints = points3D.map((point) => {
-    // Transform to world space
-    const worldPoint = applyTransformToPoint(point, sceneObject);
-    // Transform to camera space
+  // Project all vertices: object transform -> camera -> screen
+  const projectedPoints = vertices3D.map((vertex) => {
+    const worldPoint = applyTransformToPoint(vertex, sceneObject);
     const cameraPoint = worldToCameraSpace(worldPoint, camera);
-    // Project to screen space
     return project3DPoint(cameraPoint);
   });
 
-  // Iterate through all polygons and draw their edges
+  // Draw each polygon's edges (consecutive vertex index pairs, closing the loop)
   for (const polygon of polygons) {
-    const vertexIndices = polygon.getVertexIndices();
+    const indices = polygon.getVertexIndices();
+    const n = indices.length;
 
-    // Draw each edge of this polygon
-    for (const vertexIdx of vertexIndices) {
-      const vertex = vertices[vertexIdx];
-      const startPoint = projectedPoints[vertex[0]];
-      const endPoint = projectedPoints[vertex[1]];
+    for (let i = 0; i < n; i++) {
+      const a = indices[i];
+      const b = indices[(i + 1) % n];
+      const start = projectedPoints[a];
+      const end = projectedPoints[b];
 
-      canvas.drawLine(
-        startPoint.x,
-        startPoint.y,
-        endPoint.x,
-        endPoint.y,
-        polygon.color
-      );
+      canvas.drawLine(start.x, start.y, end.x, end.y, polygon.color);
     }
   }
 }

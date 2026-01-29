@@ -1,4 +1,4 @@
-// Polygon3D class containing vertex indices that reference edges in the parent Object3D
+// Polygon3D class containing vertex indices that reference vertices in the parent Mesh3D
 export class Polygon3D {
     public color: string;
     private _vertexIndices: number[]; // Array of indices referencing vertices (edges) in Object3D
